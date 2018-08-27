@@ -130,19 +130,9 @@ def register():
         if request.form.get("password") != request.form.get("confirmation"):
             return apology("password does not match confirmation", 403)
 
-        # username = request.form.get("username")
-        # password = generate_password_hash(request.form.get("password"))
-
-        result = db.execute("INSERT INTO users (username, hash) VALUES (:username, :password",
-                            username=request.form.get("username"), password=generate_password_hash(request.form.get("password")))
-        # if not result:
-        #     return apology("username already exists")
-
-        # rows = db.execute("SELECT * FROM users WHERE username = :username", username=request.form.get("username"))
+        result = db.execute("INSERT INTO users (username, hash) VALUES ('%s','%s')" % (request.form.get("username"), generate_password_hash(request.form.get("password"))))
 
         return redirect("/")
-
-    #   rows = db.execute("SELECT * FROM users WHERE username = :username",
 
     return render_template("register.html")
 
