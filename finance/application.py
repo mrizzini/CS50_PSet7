@@ -109,7 +109,16 @@ def logout():
 @login_required
 def quote():
     """Get stock quote."""
-    return apology("TODO")
+
+    if request.method == "POST":
+        quote = lookup(request.form.get("symbol"))
+        print(quote)
+        if type(quote) is dict:
+            return render_template("quoted.html", stockQuote=quote)
+        else:
+            return apology("Enter valid stock symbol")
+
+    return render_template("quote.html")
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -130,7 +139,11 @@ def register():
         if request.form.get("password") != request.form.get("confirmation"):
             return apology("password does not match confirmation", 403)
 
-        result = db.execute("INSERT INTO users (username, hash) VALUES ('%s','%s')" % (request.form.get("username"), generate_password_hash(request.form.get("password"))))
+        # result = db.execute("INSERT INTO users (username, hash) VALUES ('%s','%s')" % (request.form.get("username"), generate_password_hash(request.form.get("password"))))
+        db.execute("INSERT INTO users (username, hash) VALUES(:username, :hash)", username=request.form.get("username"), hash=generate_password_hash(request.form.get("password")))
+
+        rows = db.execute("SELECT * FROM users WHERE username = :username", username=request.form.get("username"))
+        session["user_id"] = rows[0]["id"]
 
         return redirect("/")
 
