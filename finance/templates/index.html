@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Log In
+{% endblock %}
+
+{% block main %}
+    <h1>Welcome, {{userInfo[0]["username"]}}</h1>
+
+<table style="width:100%">
+  <tr>
+    <th><b>Symbol</b></th>
+    <th><b>Shares</b></th>
+    <th><b>Price</b></th>
+    <th><b>TOTAL</b></th>
+  </tr>
+
+{% for stock, prices in priceInfo %}
+  <tr>
+    <td>{{stock.stockSymbol}}</td>
+    <td>{{stock.shares}}</td>
+    <td>{{"$%.2f" | format(prices.price)}}</td>
+    <td>{{"$%.2f" | format(prices.price * stock.shares) }}</td>
+
+{% endfor %}
+  </tr>
+  <tr>
+    <td>CASH</td>
+    <td></td>
+    <td></td>
+    <td>{{"$%.2f" | format(userInfo[0]["cash"])}}</td>
+  </tr>
+  <tr>
+    <td></td>
+    <td></td>
+    <td></td>
+  {% for stock, prices in priceInfo %}
+  {% set testing = prices.price %}
+  {% endfor %}
+  <td>Total: {{testing}}</td>
+
+  </tr>
+
+</table>
+<br>
+<!--<h3>Your current cash balance is {{"$%.2f" | format(userInfo[0]["cash"])}}</h3>-->
+<!--<h3>Your grand total balance is {{priceInfo | sum(attribute='price')}}</h3>-->
+
+{% endblock %}
+
