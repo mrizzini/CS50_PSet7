@@ -37,14 +37,12 @@
   {% for stock, prices in priceInfo %}
   {% set testing = prices.price %}
   {% endfor %}
-  <td>Total: {{testing}}</td>
+  <td>Total: {{"$%.2f" | format(grandTotal)}}</td>
 
   </tr>
 
 </table>
 <br>
-<!--<h3>Your current cash balance is {{"$%.2f" | format(userInfo[0]["cash"])}}</h3>-->
-<!--<h3>Your grand total balance is {{priceInfo | sum(attribute='price')}}</h3>-->
 
 {% endblock %}
 

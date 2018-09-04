@@ -6,4 +6,23 @@
 
 {% block main %}
 <h1>History</h1>
+
+<table style="width:100%">
+  <tr>
+    <th><b>Type of Transaction</b></th>
+    <th><b>Date Purchased</b></th>
+    <th><b>Symbol</b></th>
+    <th><b>Shares</b></th>
+    <th><b>Price at Transaction</b></th>
+  </tr>
+
+{% for stock in transactionHistory %}
+  <tr>
+    <td>{{stock.boughtOrSold}}</td>
+    <td>{{stock.datePurchased}}</td>
+    <td>{{stock.symbol}}</td>
+    <td>{{stock.shares}}</td>
+    <td>{{"$%.2f" | format(stock.price)}}</td>
+{% endfor %}
+</table>
 {% endblock %}

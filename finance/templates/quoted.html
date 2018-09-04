@@ -5,8 +5,16 @@
 {% endblock %}
 
 {% block main %}
+    <h1>{{stockQuote.name}} ({{stockQuote.symbol}})</h1>
+    <h2>{{"$%.2f" | format(stockQuote.price)}}</h2>
 
-        <h1>{{stockQuote.name}} ({{stockQuote.symbol}})</h1>
-        <h2>{{"$%.2f" | format(stockQuote.price)}}</h2>
-
+    <br>
+    <br>
+    <h5>Find another quote</h5>
+    <form action="/quote" method="post">
+        <div class="form-group">
+            <input autocomplete="off" autofocus class="form-control" name="symbol" placeholder="Stock symbol" type="text"/>
+        </div>
+        <button class="btn btn-primary" type="submit">Look up stock</button>
+    </form>
 {% endblock %}
