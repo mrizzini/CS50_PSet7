@@ -51,53 +51,40 @@ def buy():
     """Buy shares of stock"""
 
     if request.method == "POST":
-        if not lookup(request.form.get("symbol")):
-            return apology("please input symbol")
-        if not request.form.get("shares"):
-            return apology("please input amount of shares")
+        if request.form.get("shares").isdigit():
+            if not lookup(request.form.get("symbol")):
+                return apology("please input symbol")
+            if not request.form.get("shares"):
+                return apology("please input amount of shares")
 
-        quote = lookup(request.form.get("symbol"))
-        numberOfShares = int(request.form.get("shares"))
-        totalPrice = float(numberOfShares * quote["price"])
-        stockSymbol = quote["symbol"]
-        userId = session["user_id"]
+            quote = lookup(request.form.get("symbol"))
+            numberOfShares = int(request.form.get("shares"))
+            totalPrice = float(numberOfShares * quote["price"])
+            stockSymbol = quote["symbol"]
+            userId = session["user_id"]
 
-        # print("total price", totalPrice)
-        # print("number of shares", numberOfShares)
-        # print("price", quote["symbol"])
-
-        if type(quote) is dict and numberOfShares > 0:
-            cash = db.execute("SELECT cash FROM users WHERE id = :userId", userId=session["user_id"])
-            # print("cash is", cash)
-            userBalance = (cash[0]["cash"])
-            # print("cash test", cashTest)
-            if userBalance < totalPrice:
-                return apology("Insufficient funds")
-            db.execute("INSERT INTO portfolio (id, stockSymbol, shares) VALUES(:ID, :stockName, :amountOfShares)", ID=session["user_id"], stockName=stockSymbol, amountOfShares=numberOfShares)
-            db.execute("UPDATE users SET cash = cash - :totalPrice WHERE id = :userId", totalPrice=float(numberOfShares * quote["price"]), userId=session["user_id"])
-            stockArray = db.execute("SELECT * from portfolio WHERE id = :userId", userId=userId)
-            # print("stock array is", stockArray)
-            currentPriceArray = []
-            for stock in stockArray:
-                currentPriceArray.append(lookup(stock["stockSymbol"]))
-            # print("current prices are", currentPriceArray)
-            user = db.execute("SELECT * from users WHERE id = :userId", userId=userId)
-            # print("USER IS", user)
-
-            completeStockInfo = zip(stockArray, currentPriceArray)
-
-
-            # for element1, element2 in completeStockInfo:
-                # print(element1, element2)
-                # print("currentPriceArray is", element2)
-            # print("complete stock info is ", completeStockInfo.stockArray)
-            # for element1, element2 in result:
-                # print(element1, element2)
-
-            return render_template("index.html", userInfo = user, priceInfo = completeStockInfo)
-
+            if type(quote) is dict and numberOfShares > 0:
+                cash = db.execute("SELECT cash FROM users WHERE id = :userId", userId=session["user_id"])
+                stockExists = db.execute("SELECT * from portfolio WHERE stockSymbol = :symbol and id = :userId", symbol=stockSymbol, userId=session["user_id"])
+                userBalance = (cash[0]["cash"])
+                if userBalance < totalPrice:
+                    return apology("Insufficient funds")
+                if len(stockExists) == 1:
+                    db.execute("UPDATE portfolio SET shares = shares + :numberOfShares where id = :userId", numberOfShares=numberOfShares, userId=session["user_id"])
+                else:
+                    db.execute("INSERT INTO portfolio (id, stockSymbol, shares) VALUES(:ID, :stockName, :amountOfShares)", ID=session["user_id"], stockName=stockSymbol, amountOfShares=numberOfShares)
+                db.execute("UPDATE users SET cash = cash - :totalPrice WHERE id = :userId", totalPrice=float(numberOfShares * quote["price"]), userId=session["user_id"])
+                stockArray = db.execute("SELECT * from portfolio WHERE id = :userId", userId=userId)
+                currentPriceArray = []
+                for stock in stockArray:
+                    currentPriceArray.append(lookup(stock["stockSymbol"]))
+                user = db.execute("SELECT * from users WHERE id = :userId", userId=userId)
+                completeStockInfo = zip(stockArray, currentPriceArray)
+                return render_template("index.html", userInfo = user, priceInfo = completeStockInfo)
+            else:
+                return apology("invalid input", 400)
         else:
-            return apology("invalid input")
+            return apology("invalid input, ints only", 400)
 
     return render_template("buy.html")
 
@@ -106,7 +93,7 @@ def buy():
 @login_required
 def history():
     """Show history of transactions"""
-    return apology("TODO")
+    return render_template("history.html")
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -164,7 +151,6 @@ def quote():
 
     if request.method == "POST":
         quote = lookup(request.form.get("symbol"))
-        # print(quote)
         if type(quote) is dict:
             return render_template("quoted.html", stockQuote=quote)
         else:
@@ -178,24 +164,16 @@ def register():
     """Register user"""
 
     if request.method == "POST":
-
         if not request.form.get("username"):
             return apology("missing username", 400)
-
         if not request.form.get("password"):
             return apology("missing password", 400)
-
         if not request.form.get("confirmation"):
             return apology("missing password confirmation", 400)
-
         if request.form.get("password") != request.form.get("confirmation"):
             return apology("password does not match confirmation", 400)
-
-        # result = db.execute("INSERT INTO users (username, hash) VALUES ('%s','%s')" % (request.form.get("username"), generate_password_hash(request.form.get("password"))))
         if not db.execute("INSERT INTO users (username, hash) VALUES(:username, :hash)", username=request.form.get("username"), hash=generate_password_hash(request.form.get("password"))):
             return apology("username already taken", 400)
-
-        # db.execute("INSERT INTO users (username, hash) VALUES(:username, :hash)", username=request.form.get("username"), hash=generate_password_hash(request.form.get("password")))
 
         rows = db.execute("SELECT * FROM users WHERE username = :username", username=request.form.get("username"))
         session["user_id"] = rows[0]["id"]
@@ -209,7 +187,41 @@ def register():
 @login_required
 def sell():
     """Sell shares of stock"""
-    return apology("TODO")
+
+    userId = session["user_id"]
+    stockArray = db.execute("SELECT * from portfolio WHERE id = :userId", userId=userId)
+
+    if request.method == "POST":
+        if request.form.get("shares").isdigit():
+            if not lookup(request.form.get("symbol")):
+                return apology("please input symbol")
+            if not request.form.get("shares"):
+                return apology("please input amount of shares")
+
+            quote = lookup(request.form.get("symbol"))
+            numberOfShares = int(request.form.get("shares"))
+            totalPrice = float(numberOfShares * quote["price"])
+            stockSymbol = quote["symbol"]
+            sharesUserCurrentlyHas = db.execute("SELECT shares FROM portfolio WHERE id = :userId and stockSymbol = :symbol", userId=userId, symbol = stockSymbol)
+            sharesUserCurrentlyHas = sharesUserCurrentlyHas[0]["shares"]
+
+            if sharesUserCurrentlyHas >= numberOfShares:
+                db.execute("UPDATE users SET cash = cash + :totalPrice WHERE id = :userId", totalPrice=float(numberOfShares * quote["price"]), userId=session["user_id"])
+                db.execute("UPDATE portfolio SET stockSymbol= :symbol, shares= shares - :totalShares WHERE stockSymbol = :symbol and id = :userId", symbol=stockSymbol, totalShares=numberOfShares, userId=session["user_id"])
+                if sharesUserCurrentlyHas - numberOfShares == 0:
+                    db.execute("DELETE FROM portfolio WHERE stockSymbol = :symbol", symbol=stockSymbol)
+                stockArray = db.execute("SELECT * from portfolio WHERE id = :userId", userId=userId)
+                currentPriceArray = []
+                for stock in stockArray:
+                    currentPriceArray.append(lookup(stock["stockSymbol"]))
+                user = db.execute("SELECT * from users WHERE id = :userId", userId=userId)
+                completeStockInfo = zip(stockArray, currentPriceArray)
+                return render_template("index.html", userInfo = user, priceInfo = completeStockInfo)
+            else:
+                return apology("you do not have enough shares", 400)
+        else:
+            return apology("invalid input, ints only", 400)
+    return render_template("sell.html", stockArray = stockArray)
 
 
 def errorhandler(e):

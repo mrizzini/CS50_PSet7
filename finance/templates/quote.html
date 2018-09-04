@@ -1,10 +1,11 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Log In
+    Quote
 {% endblock %}
 
 {% block main %}
+    <h1>Find a quote</h1>
     <form action="/quote" method="post">
         <div class="form-group">
             <input autocomplete="off" autofocus class="form-control" name="symbol" placeholder="Stock symbol" type="text"/>
