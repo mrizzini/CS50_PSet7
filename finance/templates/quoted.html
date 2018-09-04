@@ -5,8 +5,8 @@
 {% endblock %}
 
 {% block main %}
-    <form action="/quote" method="get">
+
         <h1>{{stockQuote.name}} ({{stockQuote.symbol}})</h1>
-        <h2>${{stockQuote.price}}</h2>
-    </form>
+        <h2>{{"$%.2f" | format(stockQuote.price)}}</h2>
+
 {% endblock %}
